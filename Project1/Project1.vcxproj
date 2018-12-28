@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\SDL2\SDL2-2.0.9\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\SDL2\SDL2-2.0.9\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\SDL2\SDL2-2.0.9\include;D:\SDL2\SDL2_image-2.0.4\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\SDL2\SDL2-2.0.9\lib\x86;D:\SDL2\SDL2_image-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,7 +81,7 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -128,6 +128,7 @@
     <Image Include="down.bmp" />
     <Image Include="hello_world.bmp" />
     <Image Include="left.bmp" />
+    <Image Include="loaded.png" />
     <Image Include="press.bmp" />
     <Image Include="right.bmp" />
     <Image Include="up.bmp" />

@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <SDL_image.h>
 #include <stdio.h>
 #include <string>
 
@@ -19,12 +20,13 @@ bool init();
 bool loadMedia();
 void close();
 
-SDL_Surface* loadSurface( std::string path );
+SDL_Surface* loadSurface(std::string path);
 SDL_Window* gWindow = NULL;
 SDL_Surface* gScreenSurface = NULL;
 SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* gCurrentSurface = NULL;
 
+SDL_Surface* gPNGSurface = NULL;
 
 bool init()
 {
@@ -45,7 +47,17 @@ bool init()
 		}
 		else
 		{
-			gScreenSurface = SDL_GetWindowSurface(gWindow);
+			//Initialize PNG loading
+			int imgFlags = IMG_INIT_PNG;
+			if (!(IMG_Init(imgFlags) & imgFlags))
+			{
+				printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+				success = false;
+			}
+			else
+			{
+				gScreenSurface = SDL_GetWindowSurface(gWindow);
+			}
 		}
 	}
 
@@ -91,34 +103,63 @@ bool loadMedia()
 		success = false;
 	}
 
+	//Load PNG surface
+	gPNGSurface = loadSurface("loaded.png");
+	if (gPNGSurface == NULL)
+	{
+		printf("Failed to load PNG image!\n");
+		success = false;
+	}
+
 	return success;
 }
 
 void close()
 {
-	for (int i = 0; i < KEY_PRESS_SURFACE_TOTAL; ++i)
+	//Free loaded image
+	SDL_FreeSurface(gPNGSurface);
+	gPNGSurface = NULL;
+
+	for (int i = 0; i < KEY_PRESS_SURFACE_TOTAL - 1; ++i)
 	{
 		SDL_FreeSurface(gKeyPressSurfaces[i]);
 		gKeyPressSurfaces[i] = NULL;
 	}
 
+	//Destroy window
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
+	//Quit SDL subsystems
+	IMG_Quit();
 	SDL_Quit();
 }
 
 SDL_Surface* loadSurface(std::string path)
 {
-	SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+	SDL_Surface* optimizedSurface = NULL;
+
+	//Load image at specified path
+	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 	if (loadedSurface == NULL)
 	{
-		printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
+	}
+	else
+	{
+		//Convert surface to screen format
+		optimizedSurface = SDL_ConvertSurface(loadedSurface, gScreenSurface->format, NULL);
+		if (optimizedSurface == NULL)
+		{
+			printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		}
+
+		//Get rid of old loaded surface
+		SDL_FreeSurface(loadedSurface);
 	}
 
-	return loadedSurface;
+	return optimizedSurface;
 }
-
 
 int main(int argc, char* args[])
 {
@@ -185,3 +226,4 @@ int main(int argc, char* args[])
 	close();
 	return 0;
 }
+
