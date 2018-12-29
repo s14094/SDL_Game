@@ -41,5 +41,17 @@
     <Image Include="loaded.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="texture.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="foo.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="battleShip.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="submarine.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
