@@ -126,16 +126,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="battleShip.bmp" />
-    <Image Include="down.bmp" />
-    <Image Include="foo.png" />
-    <Image Include="hello_world.bmp" />
-    <Image Include="left.bmp" />
-    <Image Include="loaded.png" />
-    <Image Include="press.bmp" />
-    <Image Include="right.bmp" />
+    <Image Include="bomb.bmp" />
+    <Image Include="barrel.bmp" />
+    <Image Include="seafloor.bmp" />
     <Image Include="submarine.bmp" />
-    <Image Include="texture.png" />
-    <Image Include="up.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

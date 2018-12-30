@@ -20,37 +20,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="hello_world.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="down.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="left.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="press.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="right.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="up.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="loaded.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="texture.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="foo.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="battleShip.bmp">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="submarine.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bomb.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="barrel.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="seafloor.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

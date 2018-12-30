@@ -1,51 +1,50 @@
-
-//Using SDL, SDL_image, standard IO, and strings
 #include <SDL.h>
 #include <SDL_image.h>
-#include <stdio.h>
-#include <windows.h>
+#include <cstdio>
 #include <string>
+#include <ctime>
+#include <list>
 
-//Screen dimension constants
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int screen_width = 640;
+const int screen_height = 480;
 
-//Texture wrapper class
-class LTexture
+using namespace::std;
+
+class l_texture
 {
 public:
 	//Initializes variables
-	LTexture();
+	l_texture();
 
 	//Deallocates memory
-	~LTexture();
+	~l_texture();
 
 	//Loads image at specified path
-	bool loadFromFile(std::string path);
+	bool loadFromFile(const string& path);
 
 #ifdef _SDL_TTF_H
 	//Creates image from font string
-	bool loadFromRenderedText(std::string textureText, SDL_Color textColor);
+	bool loadFromRenderedText(string textureText, SDL_Color textColor);
 #endif
 
 	//Deallocates texture
 	void free();
 
 	//Set color modulation
-	void setColor(Uint8 red, Uint8 green, Uint8 blue);
+	void setColor(Uint8 red, Uint8 green, Uint8 blue) const;
 
 	//Set blending
-	void setBlendMode(SDL_BlendMode blending);
+	void setBlendMode(SDL_BlendMode blending) const;
 
 	//Set alpha modulation
-	void setAlpha(Uint8 alpha);
+	void setAlpha(Uint8 alpha) const;
 
 	//Renders texture at given point
-	void render(int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
+	void render(int x, int y, SDL_Rect* clip = nullptr, double angle = 0.0, SDL_Point* center = nullptr, SDL_RendererFlip flip = SDL_FLIP_NONE) const;
 
 	//Gets image dimensions
-	int getWidth();
-	int getHeight();
+	int getWidth() const;
+	int getHeight() const;
 
 private:
 	//The actual hardware texture
@@ -56,136 +55,140 @@ private:
 	int mHeight;
 };
 
-//The ship that will move around on the screen
+class Background
+{
+public:
+	Background();
+	static void render();
+};
+
 class Ship
 {
 public:
-	//The dimensions of the ship
 	static const int SHIP_WIDTH = 40;
 	static const int SHIP_HEIGHT = 20;
-
-	//Maximum axis velocity of the ship
 	static const int SHIP_VEL = 1;
-
-	//Initializes the variables
 	Ship();
-
-	//Takes key presses and adjusts the ship's velocity
-	void handleEvent(SDL_Event& e);
-
-	//Moves the ship and checks collision
-	void move(SDL_Rect& waterSurface);
-
-	//Shows the ship on the screen
-	void render();
-
-private:
-	//The X and Y offsets of the ship
 	int mPosX, mPosY;
 
-	//The velocity of the ship
+	void handleEvent(SDL_Event & e);
+	void move(SDL_Rect& water_surface);
+	void render() const;
+	SDL_Rect mCollider{};
+
+private:
 	int mVelX, mVelY;
 
-	//Ship's collision box
-	SDL_Rect mCollider;
+};
+
+class Bomb
+{
+public:
+	static const int BOMB_WIDTH = 8;
+	static const int BOMB_HEIGHT = 8;
+	static const int BOMB_VEL = 2;
+
+	Bomb();
+	int mPosX, mPosY;
+
+	void handleEvent(SDL_Event& e);
+	void move(Ship & ship);
+	void render() const;
+
+	bool activated = false;
+	SDL_Rect mCollider{};
+
+private:
+	int mVelX, mVelY;
 };
 
 class Submarine
 {
 public:
-	//The dimensions of the ship
 	static const int SUBMARINE_WIDTH = 27;
 	static const int SUBMARINE_HEIGHT = 20;
-
-	//Maximum axis velocity of the ship
 	static const int SUBMARINE_VEL = 2;
 
-	//Initializes the variables
 	Submarine();
 
-	//Takes key presses and adjusts the ship's velocity
-	void handleEvent(SDL_Event& e);
+	void move(Bomb & bomb);
+	void render() const;
 
-	//Moves the ship and checks collision
-	void move(SDL_Rect& waterSurface);
-
-	void move(bool & facingRight);
-
-	//Shows the ship on the screen
-	void render();
+	bool facingRight = true;
+	int mPosX, mPosY;
+	int ammunition = 5;
 
 private:
-	//The X and Y offsets of the ship
-	int mPosX, mPosY;
-
-	//The velocity of the ship
 	int mVelX, mVelY;
-
-	//Ship's collision box
-	SDL_Rect mCollider;
+	SDL_Rect mCollider{};
 };
 
+class Barrel
+{
+public:
+	static const int BARREL_WIDTH = 8;
+	static const int BARREL_HEIGHT = 8;
+	static const int BARREL_VEL = 2;
 
-//Starts up SDL and creates window
+	Barrel();
+	int mPosX, mPosY;
+	int mVelX, mVelY;
+	bool available = true;
+	bool activated = false;
+
+	void move(Submarine& submarine, Ship& ship, SDL_Rect& waterSurface);
+	void move(Submarine& submarine, Ship& ship, SDL_Rect& waterSurface, int id);
+	void render() const;
+
+	SDL_Rect mCollider{};
+};
+
 bool init();
-
-//Loads media
 bool loadMedia();
-
-//Frees media and shuts down SDL
 void close();
-
-//Box collision detector
 bool checkCollision(SDL_Rect a, SDL_Rect b);
 
-//The window we'll be rendering to
-SDL_Window* gWindow = NULL;
+SDL_Window* gWindow = nullptr;
+SDL_Renderer* gRenderer = nullptr;
 
-//The window renderer
-SDL_Renderer* gRenderer = NULL;
 
-//Scene textures
-LTexture gShipTexture;
+l_texture gBackgroundSeaTexture;
+l_texture gShipTexture;
+l_texture gSubmarineTexture;
+l_texture gBombTexture;
+l_texture gBarrelTexture;
 
-//Scene textures
-LTexture gSubmarineTexture;
-
-LTexture::LTexture()
+l_texture::l_texture()
 {
-	//Initialize
-	mTexture = NULL;
+	mTexture = nullptr;
 	mWidth = 0;
 	mHeight = 0;
 }
 
-LTexture::~LTexture()
+l_texture::~l_texture()
 {
-	//Deallocate
 	free();
 }
 
-bool LTexture::loadFromFile(std::string path)
+bool l_texture::loadFromFile(const string& path)
 {
-	//Get rid of preexisting texture
 	free();
 
-	//The final texture
-	SDL_Texture* newTexture = NULL;
+	SDL_Texture* newTexture = nullptr;
 
-	//Load image at specified path
 	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-	if (loadedSurface == NULL)
+	if (loadedSurface == nullptr)
 	{
 		printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
 	}
 	else
 	{
 		//Color key image
-		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
+		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 255, 0, 255));
 
 		//Create texture from surface pixels
 		newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
-		if (newTexture == NULL)
+		if (newTexture == nullptr)
 		{
 			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
 		}
@@ -200,13 +203,12 @@ bool LTexture::loadFromFile(std::string path)
 		SDL_FreeSurface(loadedSurface);
 	}
 
-	//Return success
 	mTexture = newTexture;
-	return mTexture != NULL;
+	return mTexture != nullptr;
 }
 
 #ifdef _SDL_TTF_H
-bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
+bool LTexture::loadFromRenderedText(string textureText, SDL_Color textColor)
 {
 	//Get rid of preexisting texture
 	free();
@@ -242,43 +244,39 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 }
 #endif
 
-void LTexture::free()
+void l_texture::free()
 {
-	//Free texture if it exists
-	if (mTexture != NULL)
+	if (mTexture != nullptr)
 	{
 		SDL_DestroyTexture(mTexture);
-		mTexture = NULL;
+		mTexture = nullptr;
 		mWidth = 0;
 		mHeight = 0;
 	}
 }
 
-void LTexture::setColor(Uint8 red, Uint8 green, Uint8 blue)
+void l_texture::setColor(const Uint8 red, Uint8 green, Uint8 blue) const
 {
-	//Modulate texture rgb
 	SDL_SetTextureColorMod(mTexture, red, green, blue);
 }
 
-void LTexture::setBlendMode(SDL_BlendMode blending)
+void l_texture::setBlendMode(SDL_BlendMode blending) const
 {
-	//Set blending function
 	SDL_SetTextureBlendMode(mTexture, blending);
 }
 
-void LTexture::setAlpha(Uint8 alpha)
+void l_texture::setAlpha(Uint8 alpha) const
 {
-	//Modulate texture alpha
 	SDL_SetTextureAlphaMod(mTexture, alpha);
 }
 
-void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip)
+void l_texture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip) const
 {
 	//Set rendering space and render to screen
 	SDL_Rect renderQuad = { x, y, mWidth, mHeight };
 
 	//Set clip rendering dimensions
-	if (clip != NULL)
+	if (clip != nullptr)
 	{
 		renderQuad.w = clip->w;
 		renderQuad.h = clip->h;
@@ -288,43 +286,64 @@ void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cen
 	SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
 }
 
-int LTexture::getWidth()
+int l_texture::getWidth() const
 {
 	return mWidth;
 }
 
-int LTexture::getHeight()
+int l_texture::getHeight() const
 {
 	return mHeight;
 }
 
+Background::Background()
+= default;
+
 Ship::Ship()
 {
-	//Initialize the offsets
 	mPosX = 0;
 	mPosY = 80;
 
-	//Set collision box dimension
 	mCollider.w = SHIP_WIDTH;
 	mCollider.h = SHIP_HEIGHT;
 
-	//Initialize the velocity
+	mVelX = 0;
+	mVelY = 0;
+}
+
+Bomb::Bomb()
+{
+	mPosX = 666;
+	mPosY = 666;
+
+	mCollider.w = BOMB_WIDTH;
+	mCollider.h = BOMB_HEIGHT;
+
 	mVelX = 0;
 	mVelY = 0;
 }
 
 Submarine::Submarine()
 {
-	//Initialize the offsets
 	mPosX = 0;
-	mPosY = 400;
+	mPosY = 200 + (rand() % 200);
 
-	//Set collision box dimension
 	mCollider.w = SUBMARINE_WIDTH;
 	mCollider.h = SUBMARINE_HEIGHT;
 
-	//Initialize the velocity
 	mVelX = 2;
+	mVelY = 0;
+}
+
+Barrel::Barrel()
+{
+	mPosX = 33;
+	mPosY = 33;
+
+	mCollider.w = BARREL_WIDTH;
+	mCollider.h = BARREL_HEIGHT;
+
+	mVelX = 0;
 	mVelY = 0;
 }
 
@@ -336,10 +355,11 @@ void Ship::handleEvent(SDL_Event& e)
 		//Adjust the velocity
 		switch (e.key.keysym.sym)
 		{
-		case SDLK_UP: mVelY -= SHIP_VEL; break;
-		case SDLK_DOWN: mVelY += SHIP_VEL; break;
+		case SDLK_DOWN: mVelY -= SHIP_VEL; break;
 		case SDLK_LEFT: mVelX -= SHIP_VEL; break;
 		case SDLK_RIGHT: mVelX += SHIP_VEL; break;
+		default: 
+			break;
 		}
 	}
 	//If a key was released
@@ -348,15 +368,36 @@ void Ship::handleEvent(SDL_Event& e)
 		//Adjust the velocity
 		switch (e.key.keysym.sym)
 		{
-		case SDLK_UP: mVelY += SHIP_VEL; break;
 		case SDLK_DOWN: mVelY -= SHIP_VEL; break;
 		case SDLK_LEFT: mVelX += SHIP_VEL; break;
 		case SDLK_RIGHT: mVelX -= SHIP_VEL; break;
+		default: 
+			break;
 		}
 	}
 }
 
-void Ship::move(SDL_Rect& waterSurface)
+void Bomb::handleEvent(SDL_Event& e)
+{
+	//If a key was pressed
+	if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
+	{
+		//Adjust the velocity
+		switch (e.key.keysym.sym)
+		{
+		case SDLK_DOWN:
+			if (mPosY < 20) {
+				mVelY = 1;
+				activated = true;
+			}
+			break;
+		default: 
+			break;
+		}
+	}
+}
+
+void Ship::move(SDL_Rect& water_surface)
 {
 	//Move the ship left or right
 	mPosX += mVelX;
@@ -364,7 +405,7 @@ void Ship::move(SDL_Rect& waterSurface)
 
 
 	//If the ship collided or went too far to the left or right
-	if ((mPosX < 0) || (mPosX + SHIP_WIDTH > SCREEN_WIDTH) || checkCollision(mCollider, waterSurface))
+	if ((mPosX < 0) || (mPosX + SHIP_WIDTH > screen_width) || checkCollision(mCollider, water_surface))
 	{
 		//Move back
 		mPosX -= mVelX;
@@ -377,7 +418,7 @@ void Ship::move(SDL_Rect& waterSurface)
 	mCollider.y = mPosY;
 
 	//If the ship collided or went too far up or down
-	if ((mPosY < 0) || (mPosY + SHIP_HEIGHT > SCREEN_HEIGHT) || checkCollision(mCollider, waterSurface))
+	if ((mPosY < 0) || (mPosY + SHIP_HEIGHT > screen_height) || checkCollision(mCollider, water_surface))
 	{
 		//Move back
 		mPosY -= mVelY;
@@ -385,7 +426,28 @@ void Ship::move(SDL_Rect& waterSurface)
 	}
 }
 
-void Submarine::move(bool& facingRight)
+void Bomb::move(Ship& ship)
+{
+	if (activated) {
+		mPosX = ship.mPosX;
+		mPosY = ship.mPosY;
+		activated = !activated;
+	}
+
+	mCollider.x = mPosX;
+	mCollider.y = mPosY;
+	mPosY += mVelY;
+
+	if ((mPosY < 0) || (mPosY + BOMB_HEIGHT > screen_height))
+	{
+		mVelY = 0;
+		mPosY = 1;
+		mPosX = 1;
+		mCollider.y = mPosY;
+	}
+}
+
+void Submarine::move(Bomb& bomb)
 {
 	if (facingRight) {
 		mPosX += mVelX;
@@ -397,32 +459,94 @@ void Submarine::move(bool& facingRight)
 	mCollider.x = mPosX;
 	mCollider.y = mPosY;
 
-	if ((mPosX < 0) || (mPosX + SUBMARINE_WIDTH > SCREEN_WIDTH))
+	if ((mPosX < 0) || (mPosX + SUBMARINE_WIDTH > screen_width))
 	{
-		//mPosX -= mVelX;
 		mCollider.x = mPosX;
+		const int changePosition = mPosY + rand() % 50 + (-25);
+		if(changePosition < (screen_width - 20) && changePosition > 150)
+		{
+			mPosY = changePosition;
+		}
 		facingRight = !facingRight;
+	}
+
+	if (checkCollision(mCollider, bomb.mCollider)) {
+
+		//TODO 
+		// WIN SCREEN
+
+		printf("WIN WIN");
 	}
 
 	mCollider.y = mPosY;
 }
 
-void Ship::render()
+void Barrel::move(Submarine& submarine, Ship& ship, SDL_Rect& waterSurface, int id)
+{
+	if (submarine.ammunition > 0) {
+		if (!available)
+		{
+			if (activated) {
+				mPosX = submarine.mPosX;
+				mPosY = submarine.mPosY;
+				mVelY = 2;
+				activated = !activated;
+			}
+
+			mCollider.x = mPosX;
+			mCollider.y = mPosY;
+			mPosY -= mVelY;
+
+			if (checkCollision(mCollider, ship.mCollider)) {
+
+				//TODO 
+				// LOSE SCREEN
+				printf("LOSE LOSE");
+			}
+
+			if (checkCollision(mCollider, waterSurface)) {
+				printf("water surface");
+
+				mVelY = 0;
+				mPosY = id * 10;
+				mPosX = 100;
+				available = true;
+			}
+
+
+		}
+	}
+}
+
+void Background::render() {
+	gBackgroundSeaTexture.render(0, 0);
+}
+
+
+void Ship::render() const
 {
 	gShipTexture.render(mPosX, mPosY);
 }
 
-void Submarine::render()
+void Bomb::render() const
+{
+	gBombTexture.render(mPosX, mPosY);
+}
+
+void Submarine::render() const
 {
 	gSubmarineTexture.render(mPosX, mPosY);
 }
 
+void Barrel::render() const
+{
+	gBarrelTexture.render(mPosX, mPosY);
+}
+
 bool init()
 {
-	//Initialization flag
-	bool success = true;
+	auto success = true;
 
-	//Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
 		printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -436,9 +560,8 @@ bool init()
 			printf("Warning: Linear texture filtering not enabled!");
 		}
 
-		//Create window
-		gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if (gWindow == NULL)
+		gWindow = SDL_CreateWindow("Pawel Lakomiec s14094", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screen_width, screen_height, SDL_WINDOW_SHOWN);
+		if (gWindow == nullptr)
 		{
 			printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
 			success = false;
@@ -447,18 +570,16 @@ bool init()
 		{
 			//Create vsynced renderer for window
 			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-			if (gRenderer == NULL)
+			if (gRenderer == nullptr)
 			{
 				printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
 				success = false;
 			}
 			else
 			{
-				//Initialize renderer color
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
-				//Initialize PNG loading
-				int imgFlags = IMG_INIT_PNG;
+				const int imgFlags = IMG_INIT_PNG;
 				if (!(IMG_Init(imgFlags) & imgFlags))
 				{
 					printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
@@ -473,18 +594,34 @@ bool init()
 
 bool loadMedia()
 {
-	//Loading success flag
 	bool success = true;
 
-	//Load press texture
+	//source https://i.redd.it/g9rfbj50xchy.png
+	if (!gBackgroundSeaTexture.loadFromFile("seafloor.bmp"))
+	{
+		printf("Failed to load submarine texture!\n");
+		success = false;
+	}
+
 	if (!gShipTexture.loadFromFile("battleShip.bmp"))
 	{
 		printf("Failed to load ship texture!\n");
 		success = false;
 	}
 
-	//Load press texture
+	if (!gBombTexture.loadFromFile("bomb.bmp"))
+	{
+		printf("Failed to load submarine texture!\n");
+		success = false;
+	}
+
 	if (!gSubmarineTexture.loadFromFile("submarine.bmp"))
+	{
+		printf("Failed to load submarine texture!\n");
+		success = false;
+	}
+
+	if (!gBarrelTexture.loadFromFile("barrel.bmp"))
 	{
 		printf("Failed to load submarine texture!\n");
 		success = false;
@@ -495,40 +632,34 @@ bool loadMedia()
 
 void close()
 {
-	//Free loaded images
+	gBackgroundSeaTexture.free();
 	gShipTexture.free();
+	gBombTexture.free();
 	gSubmarineTexture.free();
+	gBarrelTexture.free();
 
-	//Destroy window	
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
-	gWindow = NULL;
-	gRenderer = NULL;
+	gWindow = nullptr;
+	gRenderer = nullptr;
 
-	//Quit SDL subsystems
 	IMG_Quit();
 	SDL_Quit();
 }
 
 bool checkCollision(SDL_Rect a, SDL_Rect b)
 {
-	//The sides of the rectangles
-	int leftA, leftB;
-	int rightA, rightB;
-	int topA, topB;
-	int bottomA, bottomB;
-
 	//Calculate the sides of rect A
-	leftA = a.x;
-	rightA = a.x + a.w;
-	topA = a.y;
-	bottomA = a.y + a.h;
+	const int leftA = a.x;
+	const int rightA = a.x + a.w;
+	const int topA = a.y;
+	const int bottomA = a.y + a.h;
 
 	//Calculate the sides of rect B
-	leftB = b.x;
-	rightB = b.x + b.w;
-	topB = b.y;
-	bottomB = b.y + b.h;
+	const int leftB = b.x;
+	const int rightB = b.x + b.w;
+	const int topB = b.y;
+	const int bottomB = b.y + b.h;
 
 	//If any of the sides from A are outside of B
 	if (bottomA <= topB)
@@ -557,81 +688,112 @@ bool checkCollision(SDL_Rect a, SDL_Rect b)
 
 int main(int argc, char* args[])
 {
-	//Start up SDL and create window
+	srand(time(nullptr));
 	if (!init())
 	{
 		printf("Failed to initialize!\n");
 	}
 	else
 	{
-		//Load media
 		if (!loadMedia())
 		{
 			printf("Failed to load media!\n");
 		}
 		else
 		{
-			//Main loop flag
 			bool quit = false;
 
-			//Event handler
 			SDL_Event e;
 
-			//The ship that will be moving around on the screen
+			Background background;
 			Ship ship;
-
+			Bomb bomb;
 			Submarine submarine;
+			Barrel barrel[9];
 
-			bool facingRight = true;
+			int bombTimer = 5000;
+			unsigned int lastTime = 0;
+			bool shot = false;
 
-			//Set the waterSurface
 			SDL_Rect waterSurface;
 			waterSurface.x = 0;
 			waterSurface.y = 100;
 			waterSurface.w = 640;
 			waterSurface.h = 1;
 
-			//While application is running
 			while (!quit)
 			{
-				//Handle events on queue
 				while (SDL_PollEvent(&e) != 0)
 				{
-					//User requests quit
 					if (e.type == SDL_QUIT)
 					{
 						quit = true;
 					}
-
-					//Handle input for the ship
 					ship.handleEvent(e);
+					bomb.handleEvent(e);
 				}
 
-				//Move the ship and check collision
 				ship.move(waterSurface);
-				submarine.move(facingRight);
+				bomb.move(ship);
+				submarine.move(bomb);
 
-				//Clear screen
+				const unsigned int currentTime = SDL_GetTicks();
+				if (currentTime > lastTime + bombTimer) {
+					bombTimer = 100 + (2 * (rand() % 1000));
+					printf("Report: %d\n", bombTimer);
+					lastTime = currentTime;
+
+					for (auto& i : barrel)
+					{
+						if(i.available && !shot)
+						{
+							i.activated = true;
+							i.available = false;
+							shot = true;
+						}
+					}
+					shot = false;
+
+				}
+
+				barrel[0].move(submarine, ship, waterSurface, 0);
+				barrel[1].move(submarine, ship, waterSurface, 1);
+				barrel[2].move(submarine, ship, waterSurface, 2);
+				barrel[3].move(submarine, ship, waterSurface, 3);
+				barrel[4].move(submarine, ship, waterSurface, 4);
+				barrel[5].move(submarine, ship, waterSurface, 5);
+				barrel[6].move(submarine, ship, waterSurface, 6);
+				barrel[7].move(submarine, ship, waterSurface, 7);
+				barrel[8].move(submarine, ship, waterSurface, 8);
+				barrel[9].move(submarine, ship, waterSurface, 9);
+
+
 				SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 				SDL_RenderClear(gRenderer);
 
-				//Render waterSurface
 				SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0xFF);
 				SDL_RenderDrawRect(gRenderer, &waterSurface);
 
-				//Render ship
+				background.render();
 				ship.render();
-
+				bomb.render();
 				submarine.render();
+				barrel[0].render();
+				barrel[1].render();
+				barrel[2].render();
+				barrel[3].render();
+				barrel[4].render();
+				barrel[5].render();
+				barrel[6].render();
+				barrel[7].render();
+				barrel[8].render();
+				barrel[9].render();
 
-				//Update screen
 				SDL_RenderPresent(gRenderer);
 			}
 		}
 	}
 
-	//Free resources and close SDL
 	close();
-
 	return 0;
 }
