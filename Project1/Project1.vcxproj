@@ -128,8 +128,11 @@
     <Image Include="battleShip.bmp" />
     <Image Include="bomb.bmp" />
     <Image Include="barrel.bmp" />
+    <Image Include="loseScreen.bmp" />
+    <Image Include="menu.bmp" />
     <Image Include="seafloor.bmp" />
     <Image Include="submarine.bmp" />
+    <Image Include="winScreen.bmp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

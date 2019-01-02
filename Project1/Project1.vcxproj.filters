@@ -35,5 +35,14 @@
     <Image Include="seafloor.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="winScreen.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="loseScreen.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="menu.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
