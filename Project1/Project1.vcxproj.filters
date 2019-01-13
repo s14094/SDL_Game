@@ -38,10 +38,10 @@
     <Image Include="winScreen.bmp">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="loseScreen.bmp">
+    <Image Include="menuScreen.bmp">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="menu.bmp">
+    <Image Include="loseScreen.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

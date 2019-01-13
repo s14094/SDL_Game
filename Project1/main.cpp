@@ -392,8 +392,8 @@ Submarine::Submarine()
 
 Barrel::Barrel()
 {
-	mPosX = 33;
-	mPosY = 33;
+	mPosX = 800;
+	mPosY = 800;
 
 	mCollider.w = BARREL_WIDTH;
 	mCollider.h = BARREL_HEIGHT;
@@ -555,7 +555,6 @@ void Submarine::move(Bomb& bomb, Difficulty& difficulty, int& gameStatus)
 	}
 
 	if (checkCollision(mCollider, bomb.mCollider)) {
-		printf("--WIN WIN--");
 		gameStatus = 3;
 	}
 
@@ -579,14 +578,11 @@ void Barrel::move(Submarine& submarine, Ship& ship, SDL_Rect& waterSurface, int 
 
 			if (checkCollision(mCollider, ship.mCollider)) {
 				gameStatus = 2;
-				printf("--LOSE--");
 			}
 			else if (checkCollision(mCollider, waterSurface)) {
-				printf("water surface");
-
 				mVelY = 0;
-				mPosY = id * 10;
-				mPosX = 100;
+				mPosY = 800;
+				mPosX = 800;
 				available = true;
 			}
 
@@ -727,7 +723,7 @@ bool loadMedia()
 		success = false;
 	}
 
-	if (!gMenuTexture.loadFromFile("menu.bmp"))
+	if (!gMenuTexture.loadFromFile("menuScreen.bmp"))
 	{
 		printf("Failed to load menu texture!\n");
 		success = false;
@@ -868,7 +864,6 @@ int main(int argc, char* args[])
 					const unsigned int currentTime = SDL_GetTicks();
 					if (currentTime > lastTime + bombTimer) {
 						bombTimer = 100*(difficulty.barrelFrequency) + (difficulty.barrelFrequency * (rand() % 1000));
-						printf("Report: %d\n", bombTimer);
 						lastTime = currentTime;
 
 						for (auto& i : barrel)

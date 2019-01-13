@@ -129,7 +129,7 @@
     <Image Include="bomb.bmp" />
     <Image Include="barrel.bmp" />
     <Image Include="loseScreen.bmp" />
-    <Image Include="menu.bmp" />
+    <Image Include="menuScreen.bmp" />
     <Image Include="seafloor.bmp" />
     <Image Include="submarine.bmp" />
     <Image Include="winScreen.bmp" />
