@@ -1,3 +1,7 @@
+//  based on tutorial http://lazyfoo.net/tutorials/SDL/
+//
+//  background image source https://i.redd.it/g9rfbj50xchy.png
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <cstdio>
@@ -165,6 +169,8 @@ public:
 	static const int BARREL_VEL = 2;
 
 	Barrel();
+	int acceleration;
+	int velFromAcceleration;
 	int mPosX, mPosY;
 	int mVelX, mVelY;
 	bool available = true;
@@ -395,6 +401,9 @@ Barrel::Barrel()
 	mPosX = 800;
 	mPosY = 800;
 
+	acceleration = 0;
+	velFromAcceleration = 0;
+
 	mCollider.w = BARREL_WIDTH;
 	mCollider.h = BARREL_HEIGHT;
 
@@ -469,7 +478,7 @@ void Menu::handleEvent(SDL_Event& e, int& difficultyLevel, Difficulty& difficult
 		case SDLK_2:
 			difficultyLevel = 2;
 			difficulty.barrelFrequency = 2;
-			difficulty.barrelMovement = 2;
+			difficulty.barrelMovement = 1;
 			difficulty.shipMovement = 2;
 			difficulty.bombMovement = 2;
 			difficulty.submarineMovement = 2;
@@ -485,7 +494,7 @@ void Menu::handleEvent(SDL_Event& e, int& difficultyLevel, Difficulty& difficult
 		case SDLK_4:
 			difficultyLevel = 4;
 			difficulty.barrelFrequency = 1;
-			difficulty.barrelMovement = 3;
+			difficulty.barrelMovement = 2;
 			difficulty.shipMovement = 1;
 			difficulty.bombMovement = 1;
 			difficulty.submarineMovement = 3;
@@ -563,28 +572,40 @@ void Submarine::move(Bomb& bomb, Difficulty& difficulty, int& gameStatus)
 
 void Barrel::move(Submarine& submarine, Ship& ship, SDL_Rect& waterSurface, int id, int& gameStatus, Difficulty& difficulty)
 {
-		if (!available)
+	if (!available)
+	{
+		if (activated) {
+			mPosX = submarine.mPosX;
+			mPosY = submarine.mPosY;
+			mVelY = 1;
+			activated = !activated;
+		}
+
+		acceleration += 1;
+		if(acceleration == 10 || acceleration == 20 || acceleration == 30 || acceleration == 40)
 		{
-			if (activated) {
-				mPosX = submarine.mPosX;
-				mPosY = submarine.mPosY;
-				mVelY = 1;
-				activated = !activated;
-			}
+			velFromAcceleration = acceleration/10;
+		}
 
-			mCollider.x = mPosX;
-			mCollider.y = mPosY;
-			mPosY -= mVelY * difficulty.barrelMovement;
 
-			if (checkCollision(mCollider, ship.mCollider)) {
-				gameStatus = 2;
-			}
-			else if (checkCollision(mCollider, waterSurface)) {
-				mVelY = 0;
-				mPosY = 800;
-				mPosX = 800;
-				available = true;
-			}
+		mCollider.x = mPosX;
+		mCollider.y = mPosY;
+		if (acceleration % 3 == 1) {
+			mPosY -= (mVelY * difficulty.barrelMovement) + velFromAcceleration;
+		}
+
+		if (checkCollision(mCollider, ship.mCollider)) {
+			gameStatus = 2;
+		}
+		else if (checkCollision(mCollider, waterSurface)) {
+			mVelY = 0;
+			mPosY = 800;
+			mPosX = 800;
+			acceleration = 0;
+			velFromAcceleration = 0;
+			available = true;
+
+		}
 
 	}
 }
@@ -680,7 +701,6 @@ bool loadMedia()
 {
 	bool success = true;
 
-	//source https://i.redd.it/g9rfbj50xchy.png
 	if (!gBackgroundSeaTexture.loadFromFile("seafloor.bmp"))
 	{
 		printf("Failed to load seafloor texture!\n");
@@ -831,12 +851,15 @@ int main(int argc, char* args[])
 
 			while (!quit)
 			{
-
 				if (gameStatus == 0)
 				{
 					while (SDL_PollEvent(&e) != 0)
 					{
 						menu.handleEvent(e, difficultyLevel, difficulty);
+						if (e.type == SDL_QUIT)
+						{
+							quit = true;
+						}
 					}
 					menu.render();
 					if (difficultyLevel > 0)
@@ -863,7 +886,7 @@ int main(int argc, char* args[])
 
 					const unsigned int currentTime = SDL_GetTicks();
 					if (currentTime > lastTime + bombTimer) {
-						bombTimer = 100*(difficulty.barrelFrequency) + (difficulty.barrelFrequency * (rand() % 1000));
+						bombTimer = 100 * (difficulty.barrelFrequency) + (difficulty.barrelFrequency * (rand() % 1000));
 						lastTime = currentTime;
 
 						for (auto& i : barrel)
@@ -879,16 +902,11 @@ int main(int argc, char* args[])
 
 					}
 
-					barrel[0].move(submarine, ship, waterSurface, 0, gameStatus, difficulty);
-					barrel[1].move(submarine, ship, waterSurface, 1, gameStatus, difficulty);
-					barrel[2].move(submarine, ship, waterSurface, 2, gameStatus, difficulty);
-					barrel[3].move(submarine, ship, waterSurface, 3, gameStatus, difficulty);
-					barrel[4].move(submarine, ship, waterSurface, 4, gameStatus, difficulty);
-					barrel[5].move(submarine, ship, waterSurface, 5, gameStatus, difficulty);
-					barrel[6].move(submarine, ship, waterSurface, 6, gameStatus, difficulty);
-					barrel[7].move(submarine, ship, waterSurface, 7, gameStatus, difficulty);
-					barrel[8].move(submarine, ship, waterSurface, 8, gameStatus, difficulty);
-					barrel[9].move(submarine, ship, waterSurface, 9, gameStatus, difficulty);
+			
+					for(int i=0; i < 9; i++)
+					{
+						barrel[i].move(submarine, ship, waterSurface, i, gameStatus, difficulty);
+					}
 
 
 					SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -901,24 +919,35 @@ int main(int argc, char* args[])
 					ship.render();
 					bomb.render();
 					submarine.render();
-					barrel[0].render();
-					barrel[1].render();
-					barrel[2].render();
-					barrel[3].render();
-					barrel[4].render();
-					barrel[5].render();
-					barrel[6].render();
-					barrel[7].render();
-					barrel[8].render();
-					barrel[9].render();
+					for (int i = 0; i < 9; i++)
+					{
+						barrel[i].render();
+					}
+
 
 				}
 
 				if (gameStatus == 2)
 				{
+					while (SDL_PollEvent(&e) != 0)
+					{
+						menu.handleEvent(e, difficultyLevel, difficulty);
+						if (e.type == SDL_QUIT)
+						{
+							quit = true;
+						}
+					}
 					lose_screen.render();
 				}
 				if (gameStatus == 3) {
+					while (SDL_PollEvent(&e) != 0)
+					{
+						menu.handleEvent(e, difficultyLevel, difficulty);
+						if (e.type == SDL_QUIT)
+						{
+							quit = true;
+						}
+					}
 					win_screen.render();
 				}
 				SDL_RenderPresent(gRenderer);
